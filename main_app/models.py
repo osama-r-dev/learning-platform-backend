@@ -6,8 +6,10 @@ class Employee(models.Model):
 
     name = models.CharField(max_length= 50)
     department = models.CharField(max_length= 50)
-   
 
+
+    def __str__(self):
+        return f"{self.name} - {self.department}"
     
 
 class Course(models.Model):
@@ -16,3 +18,8 @@ class Course(models.Model):
     skills = models.CharField(max_length=200)
     date_created = models.DateField(auto_now=True)
     employee = models.ForeignKey(Employee, on_delete= models.CASCADE, related_name="courses")
+
+
+
+
+
