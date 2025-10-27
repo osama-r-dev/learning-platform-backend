@@ -4,6 +4,7 @@ from .serializers import EmployeeSerializer, CourseSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 # Create your views here.
 
 
@@ -22,11 +23,23 @@ class EmployeeIndex(APIView):
             serializer.save()
             response = Response(serializer.data, status= status.HTTP_200_OK)
             return response
+
+
+
+class EmployeeDetail(APIView):
+    def put(self, request, emp_Id):
+        queryset = get_object_or_404(Employee,id = emp_Id)
+        serializer = EmployeeSerializer(queryset, data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
+
 class CourseIndex(APIView):
     def get(self, request, emp_Id):
         queryset = Course.objects.filter(employee_id = emp_Id)
         serializer = CourseSerializer(queryset, many = True)
         print(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
-            
+
+   
