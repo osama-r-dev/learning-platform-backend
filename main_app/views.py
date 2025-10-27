@@ -8,8 +8,6 @@ from django.shortcuts import get_object_or_404
 # Create your views here.
 
 
-
-
 class EmployeeIndex(APIView):
 
     def get(self, request):
@@ -24,8 +22,6 @@ class EmployeeIndex(APIView):
             response = Response(serializer.data, status= status.HTTP_200_OK)
             return response
 
-
-
 class EmployeeDetail(APIView):
     def put(self, request, emp_Id):
         queryset = get_object_or_404(Employee,id = emp_Id)
@@ -33,6 +29,11 @@ class EmployeeDetail(APIView):
         if serializer.is_valid():
             serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, emp_Id):
+        queryset = get_object_or_404(Employee,id = emp_Id)
+        queryset.delete()
+        return Response({"message":"You deleted an employee"},status=status.HTTP_200_OK )
         
 
 class CourseIndex(APIView):
@@ -41,5 +42,12 @@ class CourseIndex(APIView):
         serializer = CourseSerializer(queryset, many = True)
         print(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-   
+    
+    def post(self, request, emp_Id):
+        serializer = CourseSerializer(data = request.data)
+        employee = get_object_or_404(Employee, id = emp_Id)
+        if serializer.is_valid():
+            serializer.save(employee = employee)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    
