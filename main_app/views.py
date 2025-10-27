@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Employee, Course
-from .serializers import EmployeeSerializer, CourseSerializer
+from .serializers import EmployeeSerializer, CourseSerializer, videoSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -50,4 +50,10 @@ class CourseIndex(APIView):
             serializer.save(employee = employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-    
+class VideoList(APIView):
+     def get(self, request, emp_Id, course_Id):
+        employee = get_object_or_404(Employee, id = emp_Id)
+        course = get_object_or_404(Course, id = course_Id, employee = employee)
+        videos = course.videos
+        serializer = videoSerializer(videos, many = True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
