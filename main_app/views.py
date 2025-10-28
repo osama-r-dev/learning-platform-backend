@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Employee, Course
+from .models import Employee, Course 
 from .serializers import EmployeeSerializer, CourseSerializer, videoSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -48,6 +48,11 @@ class CourseIndex(APIView):
         if serializer.is_valid():
             serializer.save(employee = employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
+class CourseDetails(APIView):
+    def get(self, request, course_Id):
+        queryset = get_object_or_404(Course, id = course_Id)
+        serializer = CourseSerializer(queryset, many = False)
+        return Response(serializer.data, status=status.HTTP_200_OK)    
         
 class CourseList(APIView):
     def get(self, request):
