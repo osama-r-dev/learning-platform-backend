@@ -19,3 +19,4 @@ class CourseSerializer(serializers.ModelSerializer):
 class videoSerializer(serializers.ModelSerializer):
         model = Video
         fields = "__all__"
+

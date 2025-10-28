@@ -24,4 +24,4 @@ urlpatterns = [
      path('api/',include('main_app.urls'))
 ]
 if settings.DEBUG:
-    urlpatterns += static(settings.MDEIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -21,7 +21,7 @@ class EmployeeIndex(APIView):
             serializer.save()
             response = Response(serializer.data, status= status.HTTP_200_OK)
             return response
-
+        
 class EmployeeDetail(APIView):
     def put(self, request, emp_Id):
         queryset = get_object_or_404(Employee,id = emp_Id)
@@ -35,7 +35,6 @@ class EmployeeDetail(APIView):
         queryset.delete()
         return Response({"message":"You deleted an employee"},status=status.HTTP_200_OK )
         
-
 class CourseIndex(APIView):
     def get(self, request, emp_Id):
         queryset = Course.objects.filter(employee_id = emp_Id)
@@ -50,6 +49,12 @@ class CourseIndex(APIView):
             serializer.save(employee = employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
+class CourseList(APIView):
+    def get(self, request):
+        queryset = Course.objects.all()
+        serializer = CourseSerializer(queryset, many = True)
+        return Response(serializer.data)
+        
 class VideoList(APIView):
      def get(self, request, emp_Id, course_Id):
         employee = get_object_or_404(Employee, id = emp_Id)
@@ -57,3 +62,4 @@ class VideoList(APIView):
         videos = course.videos
         serializer = videoSerializer(videos, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+     
