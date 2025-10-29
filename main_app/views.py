@@ -5,10 +5,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 # Create your views here.
+from django.contrib.auth import get_user_model
+
+User = get_user_model
 
 class EmployeeIndex(APIView):
-
+    permission_classes = [IsAuthenticated]
     def get(self, request):   
         queryset = Employee.objects.all()
         serializer = EmployeeSerializer(queryset, many = True)
@@ -67,3 +71,21 @@ class VideoList(APIView):
         serializer = videoSerializer(videos, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
      
+class SignupUserView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email')
+    
+        user = User.objects.create_user(
+            username = username,
+            password = password,
+            email = email
+        ) 
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        })
