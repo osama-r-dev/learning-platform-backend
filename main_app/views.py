@@ -9,8 +9,9 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 # Create your views here.
 from django.contrib.auth import get_user_model
 
-User = get_user_model
+User = get_user_model()
 
+# To get all the employees and to add a new employee
 class EmployeeIndex(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):   
@@ -25,37 +26,66 @@ class EmployeeIndex(APIView):
             response = Response(serializer.data, status= status.HTTP_200_OK)
             return response
         
+# Getting the details of a specific employee  and deleting an employee(Tested)      
 class EmployeeDetail(APIView):
-    def put(self, request, emp_Id):
-        queryset = get_object_or_404(Employee,id = emp_Id)
-        serializer = EmployeeSerializer(queryset, data = request.data)
-        if serializer.is_valid():
-            serializer.save()
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        queryset = get_object_or_404(Employee,id = request.user.employee.id)
+        serializer = EmployeeSerializer(queryset, many = False)
+        # if serializer.is_valid():
+        #     serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def delete(self, request, emp_Id):
-        queryset = get_object_or_404(Employee,id = emp_Id)
+    def put(self, request):
+        queryset = get_object_or_404(Employee,id = request.user.employee.id)
+        serializer = EmployeeSerializer(queryset,data = request.data)
+        if serializer.is_valid():
+          serializer.save()
+          return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    def delete(self, request):
+        queryset = get_object_or_404(Employee,id = request.user.employee.id)
         queryset.delete()
         return Response({"message":"You deleted an employee"},status=status.HTTP_200_OK )
-        
+    
+
+
+ # Adding a course and getting all courses for a specific employee  (Tested)   
 class CourseIndex(APIView):
-    def get(self, request, emp_Id):
-        queryset = Course.objects.filter(employee_id = emp_Id)
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        queryset = Course.objects.filter( employee = request.user.employee)
         serializer = CourseSerializer(queryset, many = True)
         print(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    def post(self, request, emp_Id):
+    def post(self, request):
         serializer = CourseSerializer(data = request.data)
-        employee = get_object_or_404(Employee, id = emp_Id)
         if serializer.is_valid():
-            serializer.save(employee = employee)
+            serializer.save(employee = request.user.employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        
+
+ # Getting the details of a specific course and deleting a course (Tested)       
 class CourseDetails(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, course_Id):
         queryset = get_object_or_404(Course, id = course_Id)
         serializer = CourseSerializer(queryset, many = False)
         return Response(serializer.data, status=status.HTTP_200_OK)    
+    
+    def put(self, request, course_Id):
+        queryset = get_object_or_404(Course, id = course_Id, employee = request.user.employee)
+        serializer = CourseSerializer(queryset,data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    def delete(self, request, course_Id):
+        queryset = get_object_or_404(Course, id = course_Id, employee = request.user.employee)
+        queryset.delete()
+        return Response({"message":"You deleted an course"},status=status.HTTP_200_OK)    
+    
+
         
 class CourseList(APIView):
     def get(self, request):
@@ -63,13 +93,6 @@ class CourseList(APIView):
         serializer = CourseSerializer(queryset, many = True)
         return Response(serializer.data)
         
-class VideoList(APIView):
-     def get(self, request, emp_Id, course_Id):
-        employee = get_object_or_404(Employee, id = emp_Id)
-        course = get_object_or_404(Course, id = course_Id, employee = employee)
-        videos = course.videos
-        serializer = videoSerializer(videos, many = True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
      
 class SignupUserView(APIView):
     permission_classes = [AllowAny]
@@ -78,14 +101,40 @@ class SignupUserView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
         email = request.data.get('email')
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
+        if not username or not password:
+            return Response({'error': 'Please Enter your information',
+                             }, status=status.HTTP_400_BAD_REQUEST)
+        
     
         user = User.objects.create_user(
             username = username,
             password = password,
             email = email
         ) 
+
+        employee = Employee.objects.create(
+    user=user,
+    name=request.data.get("name"),
+    department=request.data.get("department")
+)
+        
         return Response({
-            'id': user.id,
+           'id': user.id,
             'username': user.username,
-            'email': user.email
-        })
+            'email': user.email,
+            'employee_id': employee.id,
+            'name': employee.name,
+            'department': employee.department
+        },status=status.HTTP_201_CREATED)
+    
+
+class VideoList(APIView):
+     def get(self, request, emp_Id, course_Id):
+        employee = get_object_or_404(Employee, id = emp_Id)
+        course = get_object_or_404(Course, id = course_Id, employee = employee)
+        videos = course.videos
+        serializer = videoSerializer(videos, many = True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
