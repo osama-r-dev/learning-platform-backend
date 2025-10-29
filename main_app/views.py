@@ -7,10 +7,9 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 # Create your views here.
 
-
 class EmployeeIndex(APIView):
 
-    def get(self, request):
+    def get(self, request):   
         queryset = Employee.objects.all()
         serializer = EmployeeSerializer(queryset, many = True)
         return Response(serializer.data)
