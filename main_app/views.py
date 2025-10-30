@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, SAFE_METHODS, BasePermission
 # Create your views here.
 from django.contrib.auth import get_user_model
 
@@ -26,7 +26,7 @@ class EmployeeIndex(APIView):
             response = Response(serializer.data, status= status.HTTP_200_OK)
             return response
         
-# Getting the details of a specific employee  and deleting an employee(Tested)      
+# Getting the details of a specific employee or deleting an employee(Tested)      
 class EmployeeDetail(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -65,9 +65,16 @@ class CourseIndex(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         
 
+
+class IsAuthenticatedOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:   
+            return True
+        return request.user and request.user.is_authenticated
+
  # Getting the details of a specific course and deleting a course (Tested)       
 class CourseDetails(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get(self, request, course_Id):
         queryset = get_object_or_404(Course, id = course_Id)
         serializer = CourseSerializer(queryset, many = False)
@@ -84,10 +91,9 @@ class CourseDetails(APIView):
         queryset = get_object_or_404(Course, id = course_Id, employee = request.user.employee)
         queryset.delete()
         return Response({"message":"You deleted an course"},status=status.HTTP_200_OK)    
-    
-
-        
+         
 class CourseList(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         queryset = Course.objects.all()
         serializer = CourseSerializer(queryset, many = True)
@@ -106,7 +112,8 @@ class SignupUserView(APIView):
         if not username or not password:
             return Response({'error': 'Please Enter your information',
                              }, status=status.HTTP_400_BAD_REQUEST)
-        
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "username in use"}, status=status.HTTP_400_BAD_REQUEST)
     
         user = User.objects.create_user(
             username = username,
@@ -119,16 +126,16 @@ class SignupUserView(APIView):
     name=request.data.get("name"),
     department=request.data.get("department")
 )
-        
-        return Response({
-           'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'employee_id': employee.id,
-            'name': employee.name,
-            'department': employee.department
-        },status=status.HTTP_201_CREATED)
-    
+        # before
+        # return Response({
+        #    'id': user.id,
+        #     'username': user.username,
+        #     'email': user.email,
+        #     'employee_id': employee.id,
+        #     'name': employee.name,
+        #     'department': employee.department
+        # },status=status.HTTP_201_CREATED)
+        return Response({"message":"Account created successfully"},status=status.HTTP_201_CREATED)
 
 class VideoList(APIView):
      def get(self, request, emp_Id, course_Id):

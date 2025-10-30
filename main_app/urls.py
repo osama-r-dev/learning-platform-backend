@@ -2,9 +2,12 @@ from django.urls import path
 from .views import EmployeeIndex, CourseIndex, EmployeeDetail, VideoList, CourseList, CourseDetails, SignupUserView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
+   # to add a new employee or remove it  
   path('employees/', EmployeeIndex.as_view(), name="employee_index" ),
-  path('employees/<int:emp_Id>/courses/', CourseIndex.as_view(), name="course_index" ),
-  path('employees/<int:emp_Id>/courses/<int:course_Id>/videos/', VideoList.as_view(), name="video_list"),
+  # path('employees/<int:emp_Id>/courses/', CourseIndex.as_view(), name="course_index" ),
+  # path('employees/<int:emp_Id>/courses/<int:course_Id>/videos/', VideoList.as_view(), name="video_list"),
+
+  # to get the details or delete a specific employe
   path('employee/', EmployeeDetail.as_view(), name="employee_detail" ),
 
   path('allcourses/',CourseList.as_view(), name = "course_list"),
