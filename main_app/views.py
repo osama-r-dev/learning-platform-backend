@@ -70,7 +70,7 @@ class IsAuthenticatedOrReadOnly(BasePermission):
             return True
         return request.user and request.user.is_authenticated
 
- # Getting the details of a specific course and deleting a course (Tested)       
+ # Getting the details of a specific course and deleting a course or editiing it (Tested)       
 class CourseDetails(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     def get(self, request, course_Id):
@@ -118,12 +118,16 @@ class SignupUserView(APIView):
             password = password,
             email = email
         ) 
-
         employee = Employee.objects.create(
     user=user,
     name=request.data.get("name"),
     department=request.data.get("department")
 )
+        Profile.objects.create(
+            employee=employee,
+            avatar = "",
+            bio="",
+            skills="",)
         # before
         # return Response({
         #    'id': user.id,
@@ -143,51 +147,41 @@ class VideoList(APIView):
         serializer = videoSerializer(videos, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+ 
 
 
-class CourseIndex(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        queryset = Course.objects.filter( employee = request.user.employee)
-        serializer = CourseSerializer(queryset, many = True)
-        print(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def post(self, request):
-        serializer = CourseSerializer(data = request.data)
-        if serializer.is_valid():
-            serializer.save(employee = request.user.employee)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ProfileIndex(APIView):
+# To get all of the profiles list in the system
+class ProfilesList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         queryset = Profile.objects.all()
         serializer = ProfileSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)      
-
+        return Response(serializer.data, status=status.HTTP_200_OK)  
+        
+# To get the details of a specific profile 
 class ProfileDetails(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get(self, request, profile_id):
-        queryset = get_object_or_404(Profile, id=profile_id)
-        serializer = ProfileSerializer(queryset)
+    def get(self, request, profile_Id):
+        profile = get_object_or_404(Profile, id=profile_Id)
+        serializer = ProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, profile_id):
-        queryset = get_object_or_404(Profile, id=profile_id, employee=request.user.employee)
-        serializer = ProfileSerializer(queryset, data=request.data)
+# To get the details of authenticated employee 
+class MyProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, employee=request.user.employee)
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        profile = get_object_or_404(Profile, employee=request.user.employee)
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, profile_id):
-        queryset = get_object_or_404(Profile, id=profile_id, employee=request.user.employee)
-        queryset.delete()
-        return Response({"message": "Profile deleted."}, status=status.HTTP_200_OK)
-
-
     

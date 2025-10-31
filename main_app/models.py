@@ -40,4 +40,4 @@ class Profile(models.Model):
     avatar = models.ImageField(upload_to='profiles/', blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     skills = models.CharField(max_length=250, blank=True)
-    contact_email = models.EmailField(blank=True, null=True)
+    # contact_email = models.EmailField(blank=True, null=True)
