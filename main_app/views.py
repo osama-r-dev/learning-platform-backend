@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import Employee, Course 
-from .serializers import EmployeeSerializer, CourseSerializer, videoSerializer
+from .models import Employee, Course, Profile 
+from .serializers import EmployeeSerializer, CourseSerializer, videoSerializer, ProfileSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -46,8 +46,6 @@ class EmployeeDetail(APIView):
         queryset = get_object_or_404(Employee,id = request.user.employee.id)
         queryset.delete()
         return Response({"message":"You deleted an employee"},status=status.HTTP_200_OK )
-    
-
 
  # Adding a course and getting all courses for a specific employee  (Tested)   
 class CourseIndex(APIView):
@@ -145,3 +143,51 @@ class VideoList(APIView):
         serializer = videoSerializer(videos, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
+class CourseIndex(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        queryset = Course.objects.filter( employee = request.user.employee)
+        serializer = CourseSerializer(queryset, many = True)
+        print(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializer = CourseSerializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save(employee = request.user.employee)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProfileIndex(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        queryset = Profile.objects.all()
+        serializer = ProfileSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)      
+
+class ProfileDetails(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request, profile_id):
+        queryset = get_object_or_404(Profile, id=profile_id)
+        serializer = ProfileSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, profile_id):
+        queryset = get_object_or_404(Profile, id=profile_id, employee=request.user.employee)
+        serializer = ProfileSerializer(queryset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, profile_id):
+        queryset = get_object_or_404(Profile, id=profile_id, employee=request.user.employee)
+        queryset.delete()
+        return Response({"message": "Profile deleted."}, status=status.HTTP_200_OK)
+
+
+    

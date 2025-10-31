@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import Employee, Course, Video
+from .models import Employee, Course, Video, Profile
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -21,3 +21,8 @@ class videoSerializer(serializers.ModelSerializer):
         model = Video
         fields = "__all__"
 
+class ProfileSerializer(serializers.ModelSerializer):
+    employee = EmployeeSerializer(read_only=True)
+    class Meta:
+        model = Profile
+        fields = '__all__'
