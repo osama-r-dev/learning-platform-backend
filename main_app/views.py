@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from .models import Employee, Course, Profile 
-from .serializers import EmployeeSerializer, CourseSerializer, videoSerializer, ProfileSerializer
+from .models import Employee, Course, Profile , Video
+from .serializers import EmployeeSerializer, CourseSerializer, VideoSerializer, ProfileSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, SAFE_METHODS, BasePermission
 # Create your views here.
@@ -61,8 +62,6 @@ class CourseIndex(APIView):
         if serializer.is_valid():
             serializer.save(employee = request.user.employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
-
 
 class IsAuthenticatedOrReadOnly(BasePermission):
     def has_permission(self, request, view):
@@ -96,8 +95,7 @@ class CourseList(APIView):
         queryset = Course.objects.all()
         serializer = CourseSerializer(queryset, many = True)
         return Response(serializer.data)
-        
-     
+            
 class SignupUserView(APIView):
     permission_classes = [AllowAny]
 
@@ -140,22 +138,55 @@ class SignupUserView(APIView):
         return Response({"message":"Account created successfully"},status=status.HTTP_201_CREATED)
 
 class VideoList(APIView):
-     def get(self, request, emp_Id, course_Id):
-        employee = get_object_or_404(Employee, id = emp_Id)
-        course = get_object_or_404(Course, id = course_Id, employee = employee)
-        videos = course.videos
-        serializer = videoSerializer(videos, many = True)
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, course_Id):
+        course = get_object_or_404(Course, id=course_Id)
+        videos = course.videos.all()
+        serializer = VideoSerializer(videos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
- 
+    def post(self, request, course_Id):
+        course = get_object_or_404(Course, id=course_Id)
+        serializer = VideoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(course=course)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+  
 
+class VideoDetails(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]  
+
+    def get(self, request, course_Id, video_id):
+        video = get_object_or_404(Video, id=video_id, course_id=course_Id)
+        serializer = VideoSerializer(video)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, course_Id, video_id):
+       
+        course = get_object_or_404(Course, id=course_Id, employee =request.user.employee)
+        video = get_object_or_404(Video, id=video_id, course=course)
+
+        serializer = VideoSerializer(video, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save() 
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, course_Id, video_id):
+        course = get_object_or_404(Course, id=course_Id,employee =request.user.employee)
+        video = get_object_or_404(Video, id=video_id, course=course)
+        video.delete()
+        return Response({"message": "Video deleted successfully."}, status=status.HTTP_204_NO_CONTENT)    
 
 # To get all of the profiles list in the system
 class ProfilesList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        queryset = Profile.objects.all()
+        queryset = Profile.objects.all() 
         serializer = ProfileSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
         
@@ -173,9 +204,12 @@ class MyProfile(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+      try:
         profile = get_object_or_404(Profile, employee=request.user.employee)
         serializer = ProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
+      except:
+          pass
 
     def put(self, request):
         profile = get_object_or_404(Profile, employee=request.user.employee)

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import EmployeeIndex, CourseIndex, EmployeeDetail, VideoList, CourseList, CourseDetails, SignupUserView ,ProfileDetails, ProfilesList, MyProfile
+from .views import EmployeeIndex, CourseIndex, EmployeeDetail, VideoList, CourseList, CourseDetails, SignupUserView ,ProfileDetails, ProfilesList, MyProfile, VideoDetails
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
   # add a new employee or get all employees in the system
@@ -21,6 +21,10 @@ urlpatterns = [
   path('allprofiles/', ProfilesList.as_view(), name = 'profile_index'),
   path('profiles/<int:profile_Id>/', ProfileDetails.as_view(), name = 'profile_details'),
   path('myprofile/', MyProfile.as_view(), name = 'profile_details'),
+
+
+  path('courses/<int:course_Id>/myvideos/', VideoList.as_view(), name = 'video_list'),
+  path('courses/<int:course_Id>/myvideos/<int:video_id>/', VideoDetails.as_view(), name = 'video_detail'),
 
 
 
