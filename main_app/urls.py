@@ -7,8 +7,6 @@ urlpatterns = [
   # to get the details or update it or delete a specific employe
   path('employee/', EmployeeDetail.as_view(), name="employee_detail" ),
 
-
-
   # list all courses in the app
   path('allcourses/',CourseList.as_view(), name = "course_list"),
   # add a course or get all courses for a speicific employee
@@ -25,8 +23,6 @@ urlpatterns = [
 
   path('courses/<int:course_Id>/myvideos/', VideoList.as_view(), name = 'video_list'),
   path('courses/<int:course_Id>/myvideos/<int:video_id>/', VideoDetails.as_view(), name = 'video_detail'),
-
-
 
 
 

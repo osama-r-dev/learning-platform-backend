@@ -47,7 +47,7 @@ class EmployeeDetail(APIView):
         queryset = get_object_or_404(Employee,id = request.user.employee.id)
         queryset.delete()
         return Response({"message":"You deleted an employee"},status=status.HTTP_200_OK )
-
+    
  # Adding a course and getting all courses for a specific employee  (Tested)   
 class CourseIndex(APIView):
     permission_classes = [IsAuthenticated]
