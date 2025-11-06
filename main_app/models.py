@@ -29,7 +29,7 @@ class Video(models.Model):
     thumbnail = models.ImageField(upload_to='course_images/', blank=True, null=True)
     title = models.CharField(max_length= 100)
     description = models.TextField(max_length=250)
-    skills = models.CharField(max_length=200)
+    skills = models.CharField(max_length=200, null=True)
     date_created = models.DateField(auto_now=True)
     course = models.ForeignKey(Course, on_delete= models.CASCADE,related_name='videos')
     video = models.FileField(upload_to='videos/',max_length=300)

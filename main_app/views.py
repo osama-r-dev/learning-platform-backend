@@ -78,11 +78,15 @@ class CourseDetails(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)    
     
     def put(self, request, course_Id):
-        queryset = get_object_or_404(Course, id = course_Id, employee = request.user.employee)
-        serializer = CourseSerializer(queryset,data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+         queryset = get_object_or_404(Course, id=course_Id, employee=request.user.employee)
+         serializer = CourseSerializer(queryset, data=request.data)
+         if serializer.is_valid():
+           serializer.save()
+           return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception:
+          return Response({"error": "Internal server error."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
     def delete(self, request, course_Id):
         queryset = get_object_or_404(Course, id = course_Id, employee = request.user.employee)
